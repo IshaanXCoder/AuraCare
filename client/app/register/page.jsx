@@ -17,10 +17,10 @@ export default function Register() {
     email: "",
     password: "",
     confirmPassword: "",
+    aadhar_number: "", // Added this field
   })
   const [loading, setLoading] = useState(false)
 
-  // Check if user already exists when wallet is connected
   useEffect(() => {
     const checkUser = async () => {
       if (walletAddress) {
@@ -31,7 +31,6 @@ export default function Register() {
           .single()
 
         if (user) {
-          // User already exists, redirect to dashboard
           router.push('/dashboard')
         }
       }
@@ -52,31 +51,39 @@ export default function Register() {
       return
     }
 
-    setLoading(true)
-    try {
-      // Store user data in Supabase
-      const { error } = await supabase
-        .from('users')
-        .insert([
-          {
-            wallet_address: walletAddress,
-            full_name: formData.name,
-            email: formData.email,
-            password: formData.password, // Note: In production, implement proper password hashing
-            created_at: new Date()
-          }
-        ])
-
-      if (error) throw error
-
-      // Redirect to dashboard after successful registration
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Registration failed. Please try again.')
-    } finally {
-      setLoading(false)
+    // Validate Aadhar number
+    if (formData.aadhar_number.length !== 12 || !/^\d+$/.test(formData.aadhar_number)) {
+      alert("Please enter a valid 12-digit Aadhar number")
+      return
     }
+
+    setLoading(true)
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          wallet_address: walletAddress,
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          aadhar_number: formData.aadhar_number,
+          is_aadhar_verified: false
+        }
+      ])
+      .select()
+
+    if (error) throw error
+
+    // Redirect to verification page instead of dashboard
+    router.push('/aadhar-verification')
+  } catch (error) {
+    console.error('Registration failed:', error)
+    alert('Registration failed: ' + error.message)
+  } finally {
+    setLoading(false)
+  }
+
   }
 
   return (
@@ -118,6 +125,29 @@ export default function Register() {
                 className="bg-white/5 border-white/10 focus:border-pink-500"
                 required
               />
+            </div>
+
+            {/* Added Aadhar Number field */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Aadhar Number</label>
+              <Input
+                type="text"
+                placeholder="Enter your 12-digit Aadhar number"
+                value={formData.aadhar_number}
+                onChange={(e) => {
+                  // Only allow numbers and limit to 12 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 12)
+                  setFormData({ ...formData, aadhar_number: value })
+                }}
+                className="bg-white/5 border-white/10 focus:border-pink-500"
+                required
+                maxLength={12}
+              />
+              {formData.aadhar_number && formData.aadhar_number.length !== 12 && (
+                <p className="text-red-500 text-sm mt-1">
+                  Aadhar number must be 12 digits
+                </p>
+              )}
             </div>
             
             <div>

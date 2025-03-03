@@ -41,26 +41,32 @@ export default function Navbar() {
   const handleConnectWallet = async () => {
     try {
       await connectWallet()
-      const { data: user } = await supabase
+      console.log('Wallet connected:', walletAddress)
+  
+      const { data: user, error } = await supabase
         .from('users')
         .select('*')
         .eq('wallet_address', walletAddress)
         .single()
-
+  
+      console.log('User data:', user, 'Error:', error)
+  
       if (user) {
+        console.log('Existing user found, redirecting to dashboard')
         router.push('/dashboard')
       } else {
+        console.log('No user found, redirecting to registration')
         router.push('/register')
       }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Connection error:', error)
     }
   }
-
+  
   const handleDisconnect = async () => {
     try {
       await disconnectWallet()
-      setShowDisconnect(false)
+      setShowDisconnect(true)
       router.push('/')
     } catch (error) {
       console.error('Error disconnecting:', error)
@@ -122,17 +128,17 @@ export default function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          {["Home", "Features", "Services", "Testimonials", "Community"].map((item) => (
-            <Link
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-white/80 hover:text-white transition-colors relative group"
-            >
-              {item}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-          ))}
-        </nav>
+  {["Dashboard", "Features", "Testimonials", "Community"].map((item) => (
+    <Link
+      key={item}
+      href={item === "Dashboard" ? "/dashboard" : `#${item.toLowerCase()}`}
+      className="text-white/80 hover:text-white transition-colors relative group"
+    >
+      {item}
+      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600 transition-all duration-300 group-hover:w-full"></span>
+    </Link>
+  ))}
+</nav>
 
         <div className="hidden md:flex items-center gap-4">
           {walletAddress ? (

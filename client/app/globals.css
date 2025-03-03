@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+
+@keyframes loading {
+  from { width: 0% }
+  to { width: 100% }
+}
+
 :root {
   --background: 0 0% 3.9%;
   --foreground: 0 0% 98%;
